@@ -3,12 +3,7 @@
 #include "Game.h"
 
 // Samo kao info pogledaj rule of 3 ili 5 ili 7
-Game::Game()
-{}
-Game::~Game()
-{}
-
-void Game::init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen)
+Game::Game(const char* title, int xpos, int ypos, int width, int height, bool fullscreen)
 {
 	int flags = 0;
 	if (fullscreen)
@@ -29,13 +24,46 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
 
 		}
 		isRunning = true;
-	} else {
 		// makni else condition, inicializitaj ovu variablu na false u deklaraciji ili konstruktoru
-		isRunning = false;
+	}
+}
+Game::~Game()
+{
+	{
+		SDL_DestroyWindow(window);
+		SDL_DestroyRenderer(renderer);
+		SDL_Quit();
+		std::cout << "Game Cleaned" << std::endl;
 	}
 }
 
-void Game::handleEvents()
+/*void Game::Init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen)
+{
+	int flags = 0;
+	if (fullscreen)
+	{
+		flags = SDL_WINDOW_FULLSCREEN;
+	}
+
+	if (SDL_Init(SDL_INIT_EVERYTHING) == 0)
+	{
+		std::cout << "Subsystems Initialised!..." << std::endl;
+
+		window = SDL_CreateWindow(title, xpos, ypos, width, height, flags);
+		//ako ne dobijes valid window ne bih rekao da ti igra radi aka isRunning == true
+		if (window)
+		{
+			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+			std::cout << " Renderer created! " << std::endl;
+
+		}
+		isRunning = true;
+	}
+		// makni else condition, inicializitaj ovu variablu na false u deklaraciji ili konstruktoru
+		
+}*/
+
+void Game::HandleEvents()
 {
 	SDL_Event event;
 	SDL_PollEvent(&event);
@@ -49,22 +77,23 @@ void Game::handleEvents()
 	}
 }
 
-void Game::update()
+void Game::Update()
 {
 	cnt++;
 	std::cout << cnt << std:: endl;
 }
 
-void Game::render()
+void Game::Render()
 {
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
 }
 
-void Game::clean()
+/*void Game::clean()
 {
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
 	SDL_Quit();
 	std::cout << "Game Cleaned" << std::endl;
 }
+*/

@@ -10,28 +10,28 @@
 class Game
 {
 public:
-	Game();
+	Game(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
 	~Game();
 	
 	// Koliko vidim init se poziva na kreaciji igre, stoga ga prebaci u konstruktor
-	void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
+	//void Init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
 	
 	// Zasto je handleEvents() public metoda koju zoves iz main-a, to mi je vise za private i da ju zoves na update-u
-	void handleEvents();
-	void update();
-	void render();
+	//void HandleEvents();
+	void Update();
+	void Render();
 	// Koliko vidim, clean se treba pozvati kada se unisti instanca igre, stoga umjesto clean funkcije prebaci kod u dekonstruktor
-	void clean();
+	
 
 	// Za funkcije koje ti vracaju state preferiraj prefix Is, kao IsRunning()
-	bool running() { return isRunning;  }
+	bool IsRunning() { return m_isRunning;  }
 
 private:
-	int cnt = 0;
-	bool isRunning;
+	int m_cnt = 0;
+	bool m_isRunning = false;
 	// Ovo je malo advanced, no ako imas ptr koji treba custom konstruktor(SDL_CreateWindow) i/ili destruktor(SDL_DestroyWindow) probaj ga staviti u strukturu
 	//Eg.
-	/*
+	
 	struct SDLWindowWrapper
 	{
 		public:
@@ -53,8 +53,12 @@ private:
 	//E sad jer SDL_Window treba lazy init, promijeni SDL_Window* window; u std::unique_ptr<SDLWindowWrapper> m_Window i pozovi make_unique kad ti treba window
 	//smart pointer ce ti pozvati dekonstrukror kad klasa ciji je member izađe is scope-a sto je amazing jer svaki put kad ne moras managat memoriju je manja sansa da crashas igru
 	// ili leakas memoriju
-	*/
-	SDL_Window* window;
-	SDL_Renderer* renderer;
+	
+	//SDL_Window* m_window;
+	std::unique_ptr<SDLWindowWrapper> m_Window;
+	SDL_Renderer* m_renderer;
+
+
+	void HandleEvents();
 };
 
