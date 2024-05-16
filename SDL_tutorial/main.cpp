@@ -13,11 +13,11 @@ int main(int arg, const char* argv[])
 	// static constexpr std::string windowTitle = "FirstEngine"
 	// static constexpr int windowWidth = 800
 	// puno lakse za citati jer ne moram znati sto init funkcija treba
-	game->init("FirstEngine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, false);
-	while (game->running()) {
-		game->handleEvents();
-		game->update();
-		game->render();
+	game->Init("FirstEngine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, false);
+	while (game->IsRunning()) {
+		game->HandleEvents();
+		game->Update();
+		game->Render();
 	}
 	game->clean();
 	return 0;
