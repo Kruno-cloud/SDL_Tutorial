@@ -1,8 +1,5 @@
-//includovi kojima je path ovisan o tome gdje je file-a su po meni evil jer se kod uvijek prebacuje iz foldera u folder
-//preferiraj #include <...> jer je on relativan naspram tvog project root-a(mozda ces morati include paths modificirati u konfiguraciji projekta no sumnjam)
 #include "Game.h"
 
-// Samo kao info pogledaj rule of 3 ili 5 ili 7
 Game::Game(const char* title, int xpos, int ypos, int width, int height, bool fullscreen)
 {
 	int flags = 0;
@@ -11,57 +8,27 @@ Game::Game(const char* title, int xpos, int ypos, int width, int height, bool fu
 		flags = SDL_WINDOW_FULLSCREEN;
 	}
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) == 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
-		std::cout << "Subsystems Initialised!..." << std::endl;
-
-		m_window = SDL_CreateWindow(title, xpos, ypos, width, height, flags);
-		//ako ne dobijes valid window ne bih rekao da ti igra radi aka isRunning == true
-		if (m_window)
-		{
-			SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
-			std::cout << " Renderer created! " << std::endl;
-
-		}
-		IsRunning = true;
-		// makni else condition, inicializitaj ovu variablu na false u deklaraciji ili konstruktoru
+		return;
 	}
+
+	m_Window = std::make_unique<SDLWindowWrapper>(title, xpos, ypos, width, height, flags);
+	//ako ne dobijes valid window ne bih rekao da ti igra radi aka isRunning == true
+	if (m_Window->m_Window == nullptr)
+	{
+		return;
+	}
+	SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+	std::cout << " Renderer created! " << std::endl;
+	m_isRunning = true;
 }
 Game::~Game()
 {
-	{
-		SDL_DestroyWindow(m_window);
-		SDL_DestroyRenderer(m_renderer);
-		SDL_Quit();
-		std::cout << "Game Cleaned" << std::endl;
-	}
+	SDL_DestroyRenderer(m_renderer);
+	SDL_Quit();
+	std::cout << "Game Cleaned" << std::endl;
 }
-
-/*void Game::Init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen)
-{
-	int flags = 0;
-	if (fullscreen)
-	{
-		flags = SDL_WINDOW_FULLSCREEN;
-	}
-
-	if (SDL_Init(SDL_INIT_EVERYTHING) == 0)
-	{
-		std::cout << "Subsystems Initialised!..." << std::endl;
-
-		window = SDL_CreateWindow(title, xpos, ypos, width, height, flags);
-		//ako ne dobijes valid window ne bih rekao da ti igra radi aka isRunning == true
-		if (window)
-		{
-			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-			std::cout << " Renderer created! " << std::endl;
-
-		}
-		isRunning = true;
-	}
-		// makni else condition, inicializitaj ovu variablu na false u deklaraciji ili konstruktoru
-		
-}*/
 
 void Game::HandleEvents()
 {
@@ -70,7 +37,7 @@ void Game::HandleEvents()
 	switch (event.type)
 	{
 	case SDL_QUIT:
-		IsRunning = false;
+		m_isRunning = false;
 		break;
 	default:
 		break;
@@ -79,8 +46,7 @@ void Game::HandleEvents()
 
 void Game::Update()
 {
-	cnt++;
-	std::cout << cnt << std:: endl;
+	HandleEvents();
 }
 
 void Game::Render()
@@ -88,12 +54,3 @@ void Game::Render()
 	SDL_RenderClear(m_renderer);
 	SDL_RenderPresent(m_renderer);
 }
-
-/*void Game::clean()
-{
-	SDL_DestroyWindow(window);
-	SDL_DestroyRenderer(renderer);
-	SDL_Quit();
-	std::cout << "Game Cleaned" << std::endl;
-}
-*/
