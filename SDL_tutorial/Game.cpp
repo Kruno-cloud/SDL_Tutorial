@@ -1,12 +1,6 @@
 #include "Game.h"
 
-
-Game::Game()
-{}
-Game::~Game()
-{}
-
-void Game::init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen)
+Game::Game(const char* title, int xpos, int ypos, int width, int height, bool fullscreen)
 {
 	int flags = 0;
 	if (fullscreen)
@@ -14,60 +8,49 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
 		flags = SDL_WINDOW_FULLSCREEN;
 	}
 
-	if (SDL_Init(SDL_INIT_EVERYTHING) == 0)
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
-		std::cout << "Subsystems Initialised!..." << std::endl;
-
-		window = SDL_CreateWindow(title, xpos, ypos, width, height, flags);
-		if (window)
-		{
-			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-			std::cout << " Renderer created! " << std::endl;
-
-		}
-		isRunning = true;
-	} else {
-		isRunning = false;
+		return;
 	}
 
+	m_Window = std::make_unique<SDLWindowWrapper>(title, xpos, ypos, width, height, flags);
+	//ako ne dobijes valid window ne bih rekao da ti igra radi aka isRunning == true
+	if (m_Window->m_Window == nullptr)
+	{
+		return;
+	}
+	SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+	std::cout << " Renderer created! " << std::endl;
+	m_isRunning = true;
+}
+Game::~Game()
+{
+	SDL_DestroyRenderer(m_renderer);
+	SDL_Quit();
+	std::cout << "Game Cleaned" << std::endl;
 }
 
-
-void Game::handleEvents()
+void Game::HandleEvents()
 {
 	SDL_Event event;
 	SDL_PollEvent(&event);
 	switch (event.type)
 	{
 	case SDL_QUIT:
-		isRunning = false;
+		m_isRunning = false;
 		break;
 	default:
 		break;
 	}
-
 }
 
-void Game::update()
+void Game::Update()
 {
-	cnt++;
-	std::cout << cnt << std:: endl;
+	HandleEvents();
 }
 
-void Game::render()
+void Game::Render()
 {
-	SDL_RenderClear(renderer);
-
-	SDL_RenderPresent(renderer);
-
-
-}
-
-void Game::clean()
-{
-	SDL_DestroyWindow(window);
-	SDL_DestroyRenderer(renderer);
-	SDL_Quit();
-	std::cout << "Game Cleaned" << std::endl;
-
+	SDL_RenderClear(m_renderer);
+	SDL_RenderPresent(m_renderer);
 }

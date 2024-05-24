@@ -1,29 +1,46 @@
 #include <iostream>
-#include "SDL.h"
+#include <memory>
+#include <SDL.h>
+#undef main
 
-#pragma once
 class Game
 {
 public:
-	Game();
+	Game() = delete;
+	Game(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
 	~Game();
 	
-	void init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen);
+	void Update();
+	void Render();
 	
-	void handleEvents();
-	void update();
-	void render();
-	void clean();
-
-
-	bool running() { return isRunning;  }
+	bool IsRunning() { return m_isRunning;  }
 
 private:
-	int cnt = 0;
-	bool isRunning;
-	SDL_Window* window;
-	SDL_Renderer* renderer;
+	int m_cnt = 0;
+	bool m_isRunning = false;
+	
+	struct SDLWindowWrapper
+	{
+	public:
+		SDLWindowWrapper(const char* title, int xpos, int ypos, int width, int height, int flags)
+		{
+			m_Window = SDL_CreateWindow(title, xpos, ypos, width, height, flags);
+		}
+		~SDLWindowWrapper()
+		{
+			if (m_Window)
+			{
+				SDL_DestroyWindow(m_Window);
+			}
+		}
+		SDLWindowWrapper(SDLWindowWrapper& wrapper) = delete;
+		SDL_Window* m_Window;
+	};
+
+	std::unique_ptr<SDLWindowWrapper> m_Window;
+	SDL_Renderer* m_renderer;
 
 
+	void HandleEvents();
 };
 
