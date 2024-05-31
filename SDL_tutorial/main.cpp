@@ -3,11 +3,18 @@
 #include <iostream>
 
 
-// Konstantne za kretanje i gravitaciju
-const int MARIO_SPEED = 1;
-const int JUMP_HEIGHT = 20;
+// Konstante za kretanje i gravitaciju
+const int JUMP_HEIGHT = 15;
 const int GRAVITY = 1;
+const int MAX_FALL_SPEED = 1;
+const int MAX_SPEED = 5;
+const int ACCELERATION = 1;
 
+// Varijable za animacije
+const int FRAME_IDLE = 0;
+const int FRAME_RUN = 1;
+const int FRAME_JUMP = 2;
+const int ANIMATION_SPEED = 10;
 
 // Funkcija za provjeru preklapanja dva pravokutnika
 bool checkCollision(SDL_Rect a, SDL_Rect b) {
@@ -113,15 +120,44 @@ int main(int argc, char* args[]) {
     SDL_FreeSurface(pipeSurface2);
 
 
+    // Učitavanje plaforme drvo
+    SDL_Surface* treePlatform = IMG_Load("textures/treePlatform.png");
+    if (!treePlatform)
+    {
+        std::cerr << "Unable to load pipe image! IMG_Error: " << IMG_GetError() << std::endl;
+        SDL_DestroyTexture(pipeTexture);
+        SDL_DestroyTexture(pipeTexture2);
+        SDL_DestroyTexture(blockTexture);
+        SDL_DestroyTexture(marioTexture);
+        SDL_DestroyTexture(backgroundTexture);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture* treeTexture = SDL_CreateTextureFromSurface(renderer, treePlatform);
+    SDL_FreeSurface(treePlatform);
+
     // Početne pozicije i brzine Marija
     int marioX = 0, marioY = 500;
     int marioVelX = 0, marioVelY = 0;
+    int marioAccX = 0;
     bool onGround = true;
+
+    // Varijable za animaciju
+    int marioState = FRAME_IDLE;
+    int frame = 0;
+    int frameCounter = 0;
+
 
 
     bool quit = false;
     SDL_Event e;
 
+
+    // Za dodane animacije kretnje potrebno je bilo promjeniti s:
+    // npr 'marioVelX = -MARIO_SPEED na marioAccX = -ACCELARATION; , marioState = FRAME_RUN;
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
@@ -130,15 +166,19 @@ int main(int argc, char* args[]) {
             else if (e.type == SDL_KEYDOWN) {
                 switch (e.key.keysym.sym) {
                 case SDLK_LEFT:
-                    marioVelX = -MARIO_SPEED;
+                   // marioVelX = -MARIO_SPEED;
+                    marioAccX = -ACCELERATION;
+                    marioState = FRAME_RUN;
                     break;
                 case SDLK_RIGHT:
-                    marioVelX = MARIO_SPEED;
+                    marioAccX = ACCELERATION;
+                    marioState = FRAME_RUN;
                     break;
                 case SDLK_UP:
                     if (onGround) {
                         marioVelY = -JUMP_HEIGHT;
                         onGround = false;
+                        marioState = FRAME_JUMP;
                     }
                     break;
                 }
@@ -147,11 +187,30 @@ int main(int argc, char* args[]) {
                 switch (e.key.keysym.sym) {
                 case SDLK_LEFT:
                 case SDLK_RIGHT:
-                    marioVelX = 0;
+                    // marioVelX = 0; ovaj dio je promjenjen nakon sto su dodane animacije
+                    marioAccX = 0;
+                    if (onGround) {
+                        marioState = FRAME_IDLE;
+                    }
                     break;
+
+
                 }
             }
         }
+
+        // Povecaj frame za 1, osiugravajuci da se ponavlja unutar opsega animacije 
+        frame++;
+        if (frame / ANIMATION_SPEED >= 3) {
+        frame = 0;
+        }
+
+
+        // Azuriranje brzine Marija, dodano nakon stvaranja animacija za Marija
+        marioVelX += marioAccX;
+        if (marioVelX > MAX_SPEED) marioVelX = MAX_SPEED;
+        if (marioVelX < -MAX_SPEED) marioVelX = -MAX_SPEED;
+
 
         // Ažuriranje pozicije Marija
         marioX += marioVelX;
@@ -160,29 +219,40 @@ int main(int argc, char* args[]) {
         // Ažuriranje gravitacije 
         if (!onGround) {
             marioVelY += GRAVITY;
+            if (marioVelY > MAX_FALL_SPEED) {
+                marioVelY = MAX_FALL_SPEED;
+            }
         }
 
 
         SDL_Rect marioRect = { marioX, marioY, 64, 64 };
         SDL_Rect pipeRect1 = { 400, 450, 64, 100 }; // Primjer položaja i veličine cijevi 
         SDL_Rect pipeRect2 = { 800, 450, 64, 100 };
+        SDL_Rect treePlatfromRect = { 1000, 450, 64, 100 };
 
-        // Provjera kolizije s vrhom cijevi
+        // Provjera kolizije s vrhom cijevi i Marija
         if (checkCollision(marioRect, pipeRect1)) {
             if (marioY + 64 <= pipeRect1.y + 10) {  // Provjera da li je Mario iznad cijevi
                 marioY = pipeRect1.y - 64;
                 marioVelY = 0;
-                onGround = true;
+                onGround = false;
             }
         }
         if (checkCollision(marioRect, pipeRect2)) {
             if (marioY + 64 <= pipeRect2.y + 10) {  // Provjera da li je Mario iznad cijevi
                 marioY = pipeRect2.y - 64;
                 marioVelY = 0;
-                onGround = true;
+                onGround = false;
             }
         }
 
+        if (checkCollision(marioRect, treePlatfromRect)) {
+            if (marioY + 64 <= treePlatfromRect.y + 10) { // Provejra dali je Mario iznad platforme drvo
+                marioY = treePlatfromRect.y - 64;
+                marioVelY = 0;
+                onGround = false;
+            }
+        }
 
 
         // Provjera dali je Mario na zemlji ( jednostavna logika ) 
@@ -209,12 +279,22 @@ int main(int argc, char* args[]) {
         marioRect.h = 64;  // postavljanje visine Marija
         marioRect.w = 64;  // postavljanje širine Marija*/
 
-       
+        // Postavljanje izvora frame-a za animaciju Marija 
+        SDL_Rect srcRect;
+        switch (marioState) {
+        case FRAME_IDLE:
+            srcRect = { frame * 64,0,64,64 };
+            break;
+        case FRAME_RUN:
+            srcRect = { frame * 64, 64, 64, 64 };
+            break;
+        case FRAME_JUMP:
+            srcRect = { frame + 64, 128, 64, 64 };
+            break;
+        }
 
         // Renderaj Marija s novom veličinom
         SDL_RenderCopy(renderer, marioTexture, NULL, &marioRect);
-
-
 
 
         // Računanje broja blokova koji stanu u širinu prozora
@@ -251,6 +331,7 @@ int main(int argc, char* args[]) {
 
         SDL_RenderCopy(renderer, pipeTexture, NULL, &pipeRect1);
         SDL_RenderCopy(renderer, pipeTexture2, NULL, &pipeRect2);
+        SDL_RenderCopy(renderer, treeTexture, NULL, &treePlatfromRect);
 
         SDL_RenderPresent(renderer);
 
@@ -262,6 +343,7 @@ int main(int argc, char* args[]) {
     SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyTexture(pipeTexture);
     SDL_DestroyTexture(pipeTexture2);
+    SDL_DestroyTexture(treeTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
