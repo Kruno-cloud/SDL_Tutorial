@@ -1,7 +1,7 @@
 ﻿#include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
-
+#include <SDLWrappers.h>
 
 // Konstante za kretanje i gravitaciju
 const int JUMP_HEIGHT = 15;
@@ -24,120 +24,61 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
     return true;
 }
 
-
-
+constexpr int ERROR_RETURN_CODE = 1;
 
 int main(int argc, char* args[]) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    SDL_Window* window = SDL_CreateWindow("Simple SDL Frame", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 1024, SDL_WINDOW_SHOWN);
-    if (!window) {
-        std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer) {
-        std::cerr << "Renderer could not be created! SDL_Error: " << SDL_GetError() << std::endl;
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-
-    // Učitavanje pozadine
-    SDL_Surface* backgroundSurface = IMG_Load("textures/CloudsBackround.png");
-    if (!backgroundSurface) {
-        std::cerr << "Unable to load background image! IMG_Error: " << IMG_GetError() << std::endl;
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-    SDL_Texture* backgroundTexture = SDL_CreateTextureFromSurface(renderer, backgroundSurface);
-    SDL_FreeSurface(backgroundSurface);
-
-    // Učitavanje Marija
-    SDL_Surface* marioSurface = IMG_Load("textures/mario.png");
-    if (!marioSurface) {
-        std::cerr << "Unable to load Mario image! IMG_Error: " << IMG_GetError() << std::endl;
-        SDL_DestroyTexture(backgroundTexture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-    SDL_Texture* marioTexture = SDL_CreateTextureFromSurface(renderer, marioSurface);
-    SDL_FreeSurface(marioSurface);
-
-    // Učitavanje bloka
-    SDL_Surface* blockSurface = IMG_Load("textures/block.png");
-    if (!blockSurface) {
-        std::cerr << "Unable to load block image! IMG_Error: " << IMG_GetError() << std::endl;
-        SDL_DestroyTexture(marioTexture);
-        SDL_DestroyTexture(backgroundTexture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-    SDL_Texture* blockTexture = SDL_CreateTextureFromSurface(renderer, blockSurface);
-    SDL_FreeSurface(blockSurface);
-
-
-    // Učitavanje 1. cijevi 
-    SDL_Surface* pipeSurface = IMG_Load("textures/pipe.png");
-    if (!pipeSurface) {
-        std::cerr << "Unable to load pipe image! IMG_Error: " << IMG_GetError() << std::endl;
-        SDL_DestroyTexture(blockTexture);
-        SDL_DestroyTexture(marioTexture);
-        SDL_DestroyTexture(backgroundTexture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-    SDL_Texture* pipeTexture = SDL_CreateTextureFromSurface(renderer, pipeSurface);
-    SDL_FreeSurface(pipeSurface);
-
-    // Učitavanje 2. cijevi
-    SDL_Surface* pipeSurface2 = IMG_Load("textures/pipe2.png");
-    if (!pipeSurface2) {
-        std::cerr << "Unable to load pipe image! IMG_Error: " << IMG_GetError() << std::endl;
-        SDL_DestroyTexture(pipeTexture);
-        SDL_DestroyTexture(blockTexture);
-        SDL_DestroyTexture(marioTexture);
-        SDL_DestroyTexture(backgroundTexture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-    SDL_Texture* pipeTexture2 = SDL_CreateTextureFromSurface(renderer, pipeSurface2);
-    SDL_FreeSurface(pipeSurface2);
-
-
-    // Učitavanje plaforme drvo
-    SDL_Surface* treePlatform = IMG_Load("textures/treePlatform.png");
-    if (!treePlatform)
+    SDL_Wrapper initilizeSDLLib(SDL_INIT_VIDEO);
+    if (initilizeSDLLib.IsInitilized() == false)
     {
-        std::cerr << "Unable to load pipe image! IMG_Error: " << IMG_GetError() << std::endl;
-        SDL_DestroyTexture(pipeTexture);
-        SDL_DestroyTexture(pipeTexture2);
-        SDL_DestroyTexture(blockTexture);
-        SDL_DestroyTexture(marioTexture);
-        SDL_DestroyTexture(backgroundTexture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
+        return ERROR_RETURN_CODE;
+    }
+    SDLWindow_Wrapper sdlWindow("Simple SDL Frame", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 1024, SDL_WINDOW_SHOWN);
+    if (sdlWindow.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
     }
 
-    SDL_Texture* treeTexture = SDL_CreateTextureFromSurface(renderer, treePlatform);
-    SDL_FreeSurface(treePlatform);
+    SDLRenderer_Wrapper sdlRenderer(&sdlWindow.GetWindow(), -1, SDL_RENDERER_ACCELERATED);
+    if (sdlRenderer.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+
+    SDLTexture_Wrapper backgroundTexture("textures/CloudsBackround.png", sdlRenderer.GetRenderer());
+    if (backgroundTexture.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+
+    SDLTexture_Wrapper marioTexture("textures/mario.png", sdlRenderer.GetRenderer());
+    if (marioTexture.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+
+    SDLTexture_Wrapper blockTexture("textures/block.png", sdlRenderer.GetRenderer());
+    if (blockTexture.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+
+    SDLTexture_Wrapper pipeTexture("textures/pipe.png", sdlRenderer.GetRenderer());
+    if (pipeTexture.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+
+    SDLTexture_Wrapper pipeTexture2("textures/pipe2.png", sdlRenderer.GetRenderer());
+    if (pipeTexture2.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+
+    SDLTexture_Wrapper treePlatform("textures/treePlatform.png", sdlRenderer.GetRenderer());
+    if (treePlatform.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
 
     // Početne pozicije i brzine Marija
     int marioX = 0, marioY = 500;
@@ -154,7 +95,6 @@ int main(int argc, char* args[]) {
 
     bool quit = false;
     SDL_Event e;
-
 
     // Za dodane animacije kretnje potrebno je bilo promjeniti s:
     // npr 'marioVelX = -MARIO_SPEED na marioAccX = -ACCELARATION; , marioState = FRAME_RUN;
@@ -262,15 +202,9 @@ int main(int argc, char* args[]) {
             onGround = true;
         }
 
-        SDL_RenderClear(renderer);
+        SDL_RenderClear(&sdlRenderer.GetRenderer());
 
-        // Renderiranje  pozadine 
-        if (backgroundTexture) {
-            SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
-        }
-        else {
-            std::cerr << "Background texture is null!" << std::endl;
-        }
+        sdlRenderer.TextureCopy(backgroundTexture.GetTexture(), NULL, NULL);
 
         // Definiranje veličine prikaza Marija 1.Način
         /*SDL_Rect marioRect;
@@ -293,9 +227,7 @@ int main(int argc, char* args[]) {
             break;
         }
 
-        // Renderaj Marija s novom veličinom
-        SDL_RenderCopy(renderer, marioTexture, NULL, &marioRect);
-
+        sdlRenderer.TextureCopy(marioTexture.GetTexture(), NULL, &marioRect);
 
         // Računanje broja blokova koji stanu u širinu prozora
         int blockWidth = 50;  // Stvarna širina slike bloka
@@ -316,8 +248,7 @@ int main(int argc, char* args[]) {
         // Renderiranje blokova ispod Marija 2.Način
         for (int i = 0; i < numBlocks; i++) {
             SDL_Rect blockRect = { i * blockWidth, 550, blockWidth, blockHeight };
-            SDL_RenderCopy(renderer, blockTexture, NULL, &blockRect);
-
+            sdlRenderer.TextureCopy(blockTexture.GetTexture(), NULL, &blockRect);
         }
 
         // Renderiranje cijevi, pipe.png
@@ -329,24 +260,12 @@ int main(int argc, char* args[]) {
         //SDL_Rect pipeRect2 = { 800, 450, 64, 100 };
         //SDL_RenderCopy(renderer, pipeTexture2, NULL, &pipeRect2);
 
-        SDL_RenderCopy(renderer, pipeTexture, NULL, &pipeRect1);
-        SDL_RenderCopy(renderer, pipeTexture2, NULL, &pipeRect2);
-        SDL_RenderCopy(renderer, treeTexture, NULL, &treePlatfromRect);
-
-        SDL_RenderPresent(renderer);
-
-        
+        sdlRenderer.TextureCopy(pipeTexture.GetTexture(), NULL, &pipeRect1);
+        sdlRenderer.TextureCopy(pipeTexture2.GetTexture(), NULL, &pipeRect2);
+        sdlRenderer.TextureCopy(treePlatform.GetTexture(), NULL, &treePlatfromRect);
+        sdlRenderer.Present();
     }
 
-    SDL_DestroyTexture(blockTexture);
-    SDL_DestroyTexture(marioTexture);
-    SDL_DestroyTexture(backgroundTexture);
-    SDL_DestroyTexture(pipeTexture);
-    SDL_DestroyTexture(pipeTexture2);
-    SDL_DestroyTexture(treeTexture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
 
     return 0;
 }
