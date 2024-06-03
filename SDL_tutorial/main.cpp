@@ -96,9 +96,22 @@ int main(int argc, char* args[]) {
     bool quit = false;
     SDL_Event e;
 
+
+    // Varijable za pracenje vremena 
+    Uint32 lastTime = SDL_GetTicks();
+    Uint32 currentTime;
+    float deltaTime;
+
+
+
     // Za dodane animacije kretnje potrebno je bilo promjeniti s:
     // npr 'marioVelX = -MARIO_SPEED na marioAccX = -ACCELARATION; , marioState = FRAME_RUN;
     while (!quit) {
+        // Izracunavanje delta vremena
+        currentTime = SDL_GetTicks();
+        deltaTime = (currentTime - lastTime) / 1000.0f; // DeltaTime u sekundama
+        lastTime = currentTime;
+
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
@@ -147,18 +160,18 @@ int main(int argc, char* args[]) {
 
 
         // Azuriranje brzine Marija, dodano nakon stvaranja animacija za Marija
-        marioVelX += marioAccX;
+        marioVelX += marioAccX * deltaTime;
         if (marioVelX > MAX_SPEED) marioVelX = MAX_SPEED;
         if (marioVelX < -MAX_SPEED) marioVelX = -MAX_SPEED;
 
 
-        // Ažuriranje pozicije Marija
-        marioX += marioVelX;
-        marioY += marioVelY;
+        // Ažuriranje pozicije Marija koristeći deltaTime
+        marioX += static_cast<int>(marioVelX * deltaTime);
+        marioY += static_cast<int> (marioVelY * deltaTime);
 
         // Ažuriranje gravitacije 
         if (!onGround) {
-            marioVelY += GRAVITY;
+            marioVelY += GRAVITY * deltaTime;
             if (marioVelY > MAX_FALL_SPEED) {
                 marioVelY = MAX_FALL_SPEED;
             }
@@ -217,13 +230,13 @@ int main(int argc, char* args[]) {
         SDL_Rect srcRect;
         switch (marioState) {
         case FRAME_IDLE:
-            srcRect = { frame * 64,0,64,64 };
+            srcRect = { (frame * ANIMATION_SPEED) % 3 * 64,0,64,64 };
             break;
         case FRAME_RUN:
-            srcRect = { frame * 64, 64, 64, 64 };
+            srcRect = { (frame * ANIMATION_SPEED) % 3 * 64, 64, 64, 64 };
             break;
         case FRAME_JUMP:
-            srcRect = { frame + 64, 128, 64, 64 };
+            srcRect = { (frame * ANIMATION_SPEED) % 3 * 64, 128, 64, 64 };
             break;
         }
 
