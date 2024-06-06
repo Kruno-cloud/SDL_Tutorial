@@ -6,11 +6,11 @@
 
 
 // Konstante za kretanje i gravitaciju
-const int JUMP_HEIGHT = 15;
-const int GRAVITY = 1;
-const int MAX_FALL_SPEED = 5;
-const int MAX_SPEED = 10;
-const int ACCELERATION = 5;
+const int JUMP_HEIGHT = 2;
+const float GRAVITY = 1.0f;
+const float MAX_FALL_SPEED = 10.0f;
+const float MAX_SPEED = 5.0f;
+const float ACCELERATION = 1.0f;
 
 // Varijable za animacije
 const int FRAME_IDLE = 0;
@@ -94,23 +94,17 @@ int main(int argc, char* args[]) {
     }
 
 
-    
-    
-
-
+   
     // Početne pozicije i brzine Marija
     float marioX = 0, marioY = 500;
-    float marioVelX = 0, marioVelY = 0;
-    float marioAccX = 0;
+    float marioVelX = 0.0f, marioVelY = 0.0f;
+    float marioAccX = 0.0f;
     bool onGround = true;
 
     // Varijable za animaciju
     int marioState = FRAME_IDLE;
     int frame = 0;
     int frameCounter = 0;
-
-
-   
 
 
     bool quit = false;
@@ -185,8 +179,8 @@ int main(int argc, char* args[]) {
 
 
         // Ažuriranje pozicije Marija koristeći deltaTime
-        marioX += static_cast<float>(marioVelX * deltaTime);
-        marioY += static_cast<float> (marioVelY * deltaTime);
+        marioX += static_cast<float>(marioVelX * deltaTime * 100);
+        marioY += static_cast<float> (marioVelY * deltaTime * 100);
 
         // Ažuriranje gravitacije 
         if (!onGround) {
@@ -197,7 +191,7 @@ int main(int argc, char* args[]) {
         }
 
 
-        SDL_Rect marioRect = { LukinSafeCast<float, int>(marioX), LukinSafeCast<float, int>(marioY), 64, 64 };
+        SDL_Rect marioRect = { marioX, marioY, 64, 64 };
         SDL_Rect pipeRect1 = { 400, 450, 64, 100 }; // Primjer položaja i veličine cijevi 
         SDL_Rect pipeRect2 = { 800, 450, 64, 100 };
         SDL_Rect treePlatfromRect = { 1000, 450, 64, 100 };
