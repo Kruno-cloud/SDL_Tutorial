@@ -2,13 +2,15 @@
 #include <SDL_image.h>
 #include <iostream>
 #include <SDLWrappers.h>
+#include <cassert>
+
 
 // Konstante za kretanje i gravitaciju
 const int JUMP_HEIGHT = 15;
 const int GRAVITY = 1;
-const int MAX_FALL_SPEED = 1;
-const int MAX_SPEED = 5;
-const int ACCELERATION = 1;
+const int MAX_FALL_SPEED = 5;
+const int MAX_SPEED = 10;
+const int ACCELERATION = 5;
 
 // Varijable za animacije
 const int FRAME_IDLE = 0;
@@ -23,6 +25,17 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
     }
     return true;
 }
+
+
+template <typename CastFrom, typename CastTo>
+CastTo LukinSafeCast(CastFrom from)
+{
+    CastTo cast = static_cast<CastTo>(from);
+    assert(from == static_cast<CastFrom>(cast) && "bad cast");
+    return cast;
+}
+
+
 
 constexpr int ERROR_RETURN_CODE = 1;
 
@@ -80,10 +93,15 @@ int main(int argc, char* args[]) {
         return ERROR_RETURN_CODE;
     }
 
+
+    
+    
+
+
     // Početne pozicije i brzine Marija
-    int marioX = 0, marioY = 500;
-    int marioVelX = 0, marioVelY = 0;
-    int marioAccX = 0;
+    float marioX = 0, marioY = 500;
+    float marioVelX = 0, marioVelY = 0;
+    float marioAccX = 0;
     bool onGround = true;
 
     // Varijable za animaciju
@@ -91,6 +109,8 @@ int main(int argc, char* args[]) {
     int frame = 0;
     int frameCounter = 0;
 
+
+   
 
 
     bool quit = false;
@@ -104,52 +124,51 @@ int main(int argc, char* args[]) {
 
 
 
-    // Za dodane animacije kretnje potrebno je bilo promjeniti s:
-    // npr 'marioVelX = -MARIO_SPEED na marioAccX = -ACCELARATION; , marioState = FRAME_RUN;
     while (!quit) {
         // Izracunavanje delta vremena
         currentTime = SDL_GetTicks();
         deltaTime = (currentTime - lastTime) / 1000.0f; // DeltaTime u sekundama
         lastTime = currentTime;
 
-        while (SDL_PollEvent(&e) != 0) {
-            if (e.type == SDL_QUIT) {
-                quit = true;
-            }
-            else if (e.type == SDL_KEYDOWN) {
-                switch (e.key.keysym.sym) {
-                case SDLK_LEFT:
-                   // marioVelX = -MARIO_SPEED;
-                    marioAccX = -ACCELERATION;
-                    marioState = FRAME_RUN;
-                    break;
-                case SDLK_RIGHT:
-                    marioAccX = ACCELERATION;
-                    marioState = FRAME_RUN;
-                    break;
-                case SDLK_UP:
-                    if (onGround) {
-                        marioVelY = -JUMP_HEIGHT;
-                        onGround = false;
-                        marioState = FRAME_JUMP;
-                    }
-                    break;
+ 
+            while (SDL_PollEvent(&e) != 0) {
+                if (e.type == SDL_QUIT) {
+                    quit = true;
                 }
-            }
-            else if (e.type == SDL_KEYUP) {
-                switch (e.key.keysym.sym) {
-                case SDLK_LEFT:
-                case SDLK_RIGHT:
-                    // marioVelX = 0; ovaj dio je promjenjen nakon sto su dodane animacije
-                    marioAccX = 0;
-                    if (onGround) {
-                        marioState = FRAME_IDLE;
+                else if (e.type == SDL_KEYDOWN) {
+                    switch (e.key.keysym.sym) {
+                    case SDLK_LEFT:
+                       // marioVelX = -MARIO_SPEED;
+                        marioAccX = -ACCELERATION;
+                        marioState = FRAME_RUN;
+                        break;
+                    case SDLK_RIGHT:
+                        marioAccX = ACCELERATION;
+                        marioState = FRAME_RUN;
+                        break;
+                    case SDLK_UP:
+                        if (onGround) {
+                            marioVelY = -JUMP_HEIGHT;
+                            onGround = false;
+                            marioState = FRAME_JUMP;
+                        }
+                        break;
                     }
-                    break;
+                }
+                else if (e.type == SDL_KEYUP) {
+                    switch (e.key.keysym.sym) {
+                    case SDLK_LEFT:
+                    case SDLK_RIGHT:
+                        // marioVelX = 0; ovaj dio je promjenjen nakon sto su dodane animacije
+                        marioAccX = 0;
+                        if (onGround) {
+                            marioState = FRAME_IDLE;
+                        }
+                        break;
 
 
+                    }
                 }
-            }
         }
 
         // Povecaj frame za 1, osiugravajuci da se ponavlja unutar opsega animacije 
@@ -166,8 +185,8 @@ int main(int argc, char* args[]) {
 
 
         // Ažuriranje pozicije Marija koristeći deltaTime
-        marioX += static_cast<int>(marioVelX * deltaTime);
-        marioY += static_cast<int> (marioVelY * deltaTime);
+        marioX += static_cast<float>(marioVelX * deltaTime);
+        marioY += static_cast<float> (marioVelY * deltaTime);
 
         // Ažuriranje gravitacije 
         if (!onGround) {
@@ -178,7 +197,7 @@ int main(int argc, char* args[]) {
         }
 
 
-        SDL_Rect marioRect = { marioX, marioY, 64, 64 };
+        SDL_Rect marioRect = { LukinSafeCast<float, int>(marioX), LukinSafeCast<float, int>(marioY), 64, 64 };
         SDL_Rect pipeRect1 = { 400, 450, 64, 100 }; // Primjer položaja i veličine cijevi 
         SDL_Rect pipeRect2 = { 800, 450, 64, 100 };
         SDL_Rect treePlatfromRect = { 1000, 450, 64, 100 };
@@ -246,6 +265,12 @@ int main(int argc, char* args[]) {
         int blockWidth = 50;  // Stvarna širina slike bloka
         int blockHeight = 50;
         int numBlocks = 1280 / blockWidth;  // Broj blokova koji stanu u širinu prozora
+
+
+
+
+
+
 
         // Renderiranje blokova ispod Marija 1.Način
         /*for (int i = 0; i < numBlocks; i++) {
