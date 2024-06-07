@@ -201,14 +201,35 @@ int main(int argc, char* args[]) {
             if (marioY + 64 <= pipeRect1.y + 10) {  // Provjera da li je Mario iznad cijevi
                 marioY = pipeRect1.y - 64;
                 marioVelY = 0;
-                onGround = false;
+                onGround = true; // MAario je sada na tlu odnosno cijevi te moze skakati, promjena s flase na true
+            }
+            else if (marioX + 64 >= pipeRect1.x && marioX < pipeRect1.x + pipeRect1.w) {
+                if (marioX + 32 <= pipeRect1.x + 32) {
+                    marioX = pipeRect1.x - 64; // Pomakni Marija lijevo od cijevi 
+                    marioVelX = 0; // Zaustavi horizontalno kretanje 
+                }
+                else { // Desna strana cijevi
+                    marioX = pipeRect1.x + pipeRect1.w; // Pomakni Marija desno od cijevi 
+                    marioVelX = 0; // Zaustavi horizontalno kretanje
+                }
             }
         }
+
         if (checkCollision(marioRect, pipeRect2)) {
             if (marioY + 64 <= pipeRect2.y + 10) {  // Provjera da li je Mario iznad cijevi
                 marioY = pipeRect2.y - 64;
                 marioVelY = 0;
-                onGround = false;
+                onGround = true;
+            }
+            else if (marioX + 64 >= pipeRect2.x && marioX < pipeRect2.x + pipeRect2.w) {
+                if (marioX + 32 <= pipeRect2.x + 32) {
+                    marioX = pipeRect2.x - 64;
+                    marioVelX = 0;
+                }
+                else {
+                    marioX = pipeRect2.x + pipeRect2.w;
+                    marioVelX = 0;
+                }
             }
         }
 
@@ -216,7 +237,17 @@ int main(int argc, char* args[]) {
             if (marioY + 64 <= treePlatfromRect.y + 10) { // Provejra dali je Mario iznad platforme drvo
                 marioY = treePlatfromRect.y - 64;
                 marioVelY = 0;
-                onGround = false;
+                onGround = true;
+            }
+            else if (marioX + 64 >= treePlatfromRect.x && marioX < treePlatfromRect.x + treePlatfromRect.w) {
+                if (marioX + 25 <= treePlatfromRect.x + 25) {
+                    marioX = treePlatfromRect.x - 64; 
+                    marioVelX = 0;
+                }
+                else {
+                    marioX = treePlatfromRect.x + treePlatfromRect.w;
+                    marioVelX = 0;
+                }
             }
         }
 
@@ -259,10 +290,6 @@ int main(int argc, char* args[]) {
         int blockWidth = 50;  // Stvarna širina slike bloka
         int blockHeight = 50;
         int numBlocks = 1280 / blockWidth;  // Broj blokova koji stanu u širinu prozora
-
-
-
-
 
 
 
