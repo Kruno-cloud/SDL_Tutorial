@@ -7,8 +7,8 @@
 
 // Konstante za kretanje i gravitaciju
 const int JUMP_HEIGHT = 2;
-const float GRAVITY = 1.0f;
-const float MAX_FALL_SPEED = 10.0f;
+const float GRAVITY = 8.0f;
+const float MAX_FALL_SPEED = 7.0f;
 const float MAX_SPEED = 5.0f;
 const float ACCELERATION = 1.0f;
 
@@ -94,7 +94,7 @@ int main(int argc, char* args[]) {
     }
 
 
-   
+
     // Početne pozicije i brzine Marija
     float marioX = 0, marioY = 500;
     float marioVelX = 0.0f, marioVelY = 0.0f;
@@ -124,51 +124,51 @@ int main(int argc, char* args[]) {
         deltaTime = (currentTime - lastTime) / 1000.0f; // DeltaTime u sekundama
         lastTime = currentTime;
 
- 
-            while (SDL_PollEvent(&e) != 0) {
-                if (e.type == SDL_QUIT) {
-                    quit = true;
-                }
-                else if (e.type == SDL_KEYDOWN) {
-                    switch (e.key.keysym.sym) {
-                    case SDLK_LEFT:
-                       // marioVelX = -MARIO_SPEED;
-                        marioAccX = -ACCELERATION;
-                        marioState = FRAME_RUN;
-                        break;
-                    case SDLK_RIGHT:
-                        marioAccX = ACCELERATION;
-                        marioState = FRAME_RUN;
-                        break;
-                    case SDLK_UP:
-                        if (onGround) {
-                            marioVelY = -JUMP_HEIGHT;
-                            onGround = false;
-                            marioState = FRAME_JUMP;
-                        }
-                        break;
+
+        while (SDL_PollEvent(&e) != 0) {
+            if (e.type == SDL_QUIT) {
+                quit = true;
+            }
+            else if (e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                case SDLK_LEFT:
+                    // marioVelX = -MARIO_SPEED;
+                    marioAccX = -ACCELERATION;
+                    marioState = FRAME_RUN;
+                    break;
+                case SDLK_RIGHT:
+                    marioAccX = ACCELERATION;
+                    marioState = FRAME_RUN;
+                    break;
+                case SDLK_UP:
+                    if (onGround) {
+                        marioVelY = -JUMP_HEIGHT;
+                        onGround = false;
+                        marioState = FRAME_JUMP;
                     }
+                    break;
                 }
-                else if (e.type == SDL_KEYUP) {
-                    switch (e.key.keysym.sym) {
-                    case SDLK_LEFT:
-                    case SDLK_RIGHT:
-                        // marioVelX = 0; ovaj dio je promjenjen nakon sto su dodane animacije
-                        marioAccX = 0;
-                        if (onGround) {
-                            marioState = FRAME_IDLE;
-                        }
-                        break;
+            }
+            else if (e.type == SDL_KEYUP) {
+                switch (e.key.keysym.sym) {
+                case SDLK_LEFT:
+                case SDLK_RIGHT:
+                    // marioVelX = 0; ovaj dio je promjenjen nakon sto su dodane animacije
+                    marioAccX = 0;
+                    if (onGround) {
+                        marioState = FRAME_IDLE;
+                    }
+                    break;
 
 
-                    }
                 }
+            }
         }
 
         // Povecaj frame za 1, osiugravajuci da se ponavlja unutar opsega animacije 
         frame++;
         if (frame / ANIMATION_SPEED >= 3) {
-        frame = 0;
+            frame = 0;
         }
 
 
@@ -179,8 +179,8 @@ int main(int argc, char* args[]) {
 
 
         // Ažuriranje pozicije Marija koristeći deltaTime
-        marioX += static_cast<float>(marioVelX * deltaTime * 100);
-        marioY += static_cast<float> (marioVelY * deltaTime * 100);
+        marioX += static_cast<float>(marioVelX * deltaTime * 500);
+        marioY += static_cast<float> (marioVelY * deltaTime * 500);
 
         // Ažuriranje gravitacije 
         if (!onGround) {
@@ -201,7 +201,7 @@ int main(int argc, char* args[]) {
             if (marioY + 64 <= pipeRect1.y + 10) {  // Provjera da li je Mario iznad cijevi
                 marioY = pipeRect1.y - 64;
                 marioVelY = 0;
-                onGround = true; // MAario je sada na tlu odnosno cijevi te moze skakati, promjena s flase na true
+                onGround = false; // MAario je sada na tlu odnosno cijevi te moze skakati, promjena s flase na true
             }
             else if (marioX + 64 >= pipeRect1.x && marioX < pipeRect1.x + pipeRect1.w) {
                 if (marioX + 32 <= pipeRect1.x + 32) {
@@ -219,7 +219,7 @@ int main(int argc, char* args[]) {
             if (marioY + 64 <= pipeRect2.y + 10) {  // Provjera da li je Mario iznad cijevi
                 marioY = pipeRect2.y - 64;
                 marioVelY = 0;
-                onGround = true;
+                onGround = false;
             }
             else if (marioX + 64 >= pipeRect2.x && marioX < pipeRect2.x + pipeRect2.w) {
                 if (marioX + 32 <= pipeRect2.x + 32) {
@@ -237,11 +237,11 @@ int main(int argc, char* args[]) {
             if (marioY + 64 <= treePlatfromRect.y + 10) { // Provejra dali je Mario iznad platforme drvo
                 marioY = treePlatfromRect.y - 64;
                 marioVelY = 0;
-                onGround = true;
+                onGround = false;
             }
             else if (marioX + 64 >= treePlatfromRect.x && marioX < treePlatfromRect.x + treePlatfromRect.w) {
                 if (marioX + 25 <= treePlatfromRect.x + 25) {
-                    marioX = treePlatfromRect.x - 64; 
+                    marioX = treePlatfromRect.x - 64;
                     marioVelX = 0;
                 }
                 else {
