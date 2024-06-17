@@ -3,7 +3,8 @@
 #include <iostream>
 #include <SDLWrappers.h>
 #include <cassert>
-
+#include <SDL_mixer.h>
+#include <MusicMixer.h>
 
 // Konstante za kretanje i gravitaciju
 const int JUMP_HEIGHT = 2;
@@ -107,6 +108,7 @@ int main(int argc, char* args[]) {
     int frameCounter = 0;
 
 
+    MusicMixer::Init();
     bool quit = false;
     SDL_Event e;
 
@@ -145,6 +147,7 @@ int main(int argc, char* args[]) {
                         marioVelY = -JUMP_HEIGHT;
                         onGround = false;
                         marioState = FRAME_JUMP;
+                        MusicMixer::PlayJumpSound();
                     }
                     break;
                 }
@@ -323,6 +326,7 @@ int main(int argc, char* args[]) {
         sdlRenderer.TextureCopy(pipeTexture2.GetTexture(), NULL, &pipeRect2);
         sdlRenderer.TextureCopy(treePlatform.GetTexture(), NULL, &treePlatfromRect);
         sdlRenderer.Present();
+        MusicMixer::CleanUp();
     }
 
 

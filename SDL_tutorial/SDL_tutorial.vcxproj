@@ -137,8 +137,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MusicMixer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MusicMixer.h" />
     <ClInclude Include="SDLWrappers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
