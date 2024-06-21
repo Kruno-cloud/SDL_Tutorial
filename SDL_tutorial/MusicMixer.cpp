@@ -15,7 +15,7 @@ void MusicMixer::Init() {
     }
 
     // Učitavanje zvučnog efekta
-    jumpSound = Mix_LoadWAV("sounds/smb_jump-small.wav");
+    jumpSound = Mix_LoadWAV("smb_jump-small.wav");
     if (jumpSound == nullptr) {
         std::cerr << "Failed to load jump sound effect! SDL_mixer Error: " << Mix_GetError() << std::endl;
     }

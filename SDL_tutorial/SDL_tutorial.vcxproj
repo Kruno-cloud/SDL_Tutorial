@@ -138,8 +138,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MusicMixer.cpp" />
+    <ClCompile Include="MarioMovment.cpp" />
+    <ClCompile Include="RenderFunctions.cpp" />
+    <ClCompile Include="SDLInitialization.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SDLInitialization.h" />
+    <ClInclude Include="RenderFunctions.h" />
+    <ClInclude Include="MarioMovment.h" />
     <ClInclude Include="MusicMixer.h" />
     <ClInclude Include="SDLWrappers.h" />
   </ItemGroup>

@@ -21,12 +21,30 @@
     <ClCompile Include="MusicMixer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MarioMovment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SDLInitialization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SDLWrappers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MusicMixer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MarioMovment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderFunctions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDLInitialization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

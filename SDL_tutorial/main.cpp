@@ -1,32 +1,34 @@
 ﻿#include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
-#include <SDLWrappers.h>
-#include <cassert>
 #include <SDL_mixer.h>
+#include <SDLWrappers.h>
 #include <MusicMixer.h>
+#include "SDLInitialization.h"
+#include "MarioMovment.h"
+#include "RenderFunctions.h"
+#include <cassert>
 
-// Konstante za kretanje i gravitaciju
+// Constants for movement and gravity
 const int JUMP_HEIGHT = 2;
 const float GRAVITY = 8.0f;
 const float MAX_FALL_SPEED = 7.0f;
 const float MAX_SPEED = 5.0f;
 const float ACCELERATION = 1.0f;
 
-// Varijable za animacije
+// Animation variables
 const int FRAME_IDLE = 0;
 const int FRAME_RUN = 1;
 const int FRAME_JUMP = 2;
 const int ANIMATION_SPEED = 10;
 
-// Funkcija za provjeru preklapanja dva pravokutnika
+// Function to check collision between two rectangles
 bool checkCollision(SDL_Rect a, SDL_Rect b) {
     if (a.x + a.w <= b.x || a.x >= b.x + b.w || a.y + a.h <= b.y || a.y >= b.y + b.h) {
         return false;
     }
     return true;
 }
-
 
 template <typename CastFrom, typename CastTo>
 CastTo LukinSafeCast(CastFrom from)
@@ -36,156 +38,112 @@ CastTo LukinSafeCast(CastFrom from)
     return cast;
 }
 
-
+// Calculate delta time
+void izracunDeltaVremena(Uint32& lastTime, Uint32& currentTime, float& deltaTime) {
+    currentTime = SDL_GetTicks();
+    deltaTime = (currentTime - lastTime) / 1000.0f; // DeltaTime in seconds
+    lastTime = currentTime;
+}
 
 constexpr int ERROR_RETURN_CODE = 1;
 
-int main(int argc, char* args[]) {
-    SDL_Wrapper initilizeSDLLib(SDL_INIT_VIDEO);
-    if (initilizeSDLLib.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
+int main(int argc, char* args[])
+{
+    SDL_Wrapper sdlWrapper(SDL_INIT_VIDEO);
+    if (!initializeSDL(sdlWrapper)) return ERROR_RETURN_CODE;
+
     SDLWindow_Wrapper sdlWindow("Simple SDL Frame", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 1024, SDL_WINDOW_SHOWN);
-    if (sdlWindow.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
+    if (!createWindow(sdlWindow)) return ERROR_RETURN_CODE;
 
     SDLRenderer_Wrapper sdlRenderer(&sdlWindow.GetWindow(), -1, SDL_RENDERER_ACCELERATED);
-    if (sdlRenderer.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
+    if (!createRenderer(sdlRenderer, sdlWindow)) return ERROR_RETURN_CODE;
 
-    SDLTexture_Wrapper backgroundTexture("textures/CloudsBackround.png", sdlRenderer.GetRenderer());
-    if (backgroundTexture.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
+    SDLTexture_Wrapper backgroundTexture, marioTexture, blockTexture, pipeTexture, pipeTexture2, treePlatform;
+    if (!loadTexture(backgroundTexture, "textures/CloudsBackround.png", sdlRenderer)) return ERROR_RETURN_CODE;
+    if (!loadTexture(marioTexture, "textures/mario.png", sdlRenderer)) return ERROR_RETURN_CODE;
+    if (!loadTexture(blockTexture, "textures/block.png", sdlRenderer)) return ERROR_RETURN_CODE;
+    if (!loadTexture(pipeTexture, "textures/pipe.png", sdlRenderer)) return ERROR_RETURN_CODE;
+    if (!loadTexture(pipeTexture2, "textures/pipe2.png", sdlRenderer)) return ERROR_RETURN_CODE;
+    if (!loadTexture(treePlatform, "textures/treePlatform.png", sdlRenderer)) return ERROR_RETURN_CODE;
 
-    SDLTexture_Wrapper marioTexture("textures/mario.png", sdlRenderer.GetRenderer());
-    if (marioTexture.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
-
-    SDLTexture_Wrapper blockTexture("textures/block.png", sdlRenderer.GetRenderer());
-    if (blockTexture.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
-
-    SDLTexture_Wrapper pipeTexture("textures/pipe.png", sdlRenderer.GetRenderer());
-    if (pipeTexture.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
-
-    SDLTexture_Wrapper pipeTexture2("textures/pipe2.png", sdlRenderer.GetRenderer());
-    if (pipeTexture2.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
-
-    SDLTexture_Wrapper treePlatform("textures/treePlatform.png", sdlRenderer.GetRenderer());
-    if (treePlatform.IsInitilized() == false)
-    {
-        return ERROR_RETURN_CODE;
-    }
-
-
-
-    // Početne pozicije i brzine Marija
+    // Pozcije i brzine Marija 
     float marioX = 0, marioY = 500;
     float marioVelX = 0.0f, marioVelY = 0.0f;
     float marioAccX = 0.0f;
     bool onGround = true;
 
-    // Varijable za animaciju
+    // Animacijske varijable
     int marioState = FRAME_IDLE;
     int frame = 0;
     int frameCounter = 0;
-
 
     MusicMixer::Init();
     bool quit = false;
     SDL_Event e;
 
-
-    // Varijable za pracenje vremena 
+    // Varijabla za praćenje vremena
     Uint32 lastTime = SDL_GetTicks();
     Uint32 currentTime;
     float deltaTime;
 
+    int blockWidth = 50;
+    int blockHeight = 50;
 
+    SDL_Rect marioRect = { static_cast<int>(marioX), static_cast<int>(marioY), 64, 64 };
+    SDL_Rect pipeRect1 = { 400, 450, 64, 100 }; // Example position and size of pipes
+    SDL_Rect pipeRect2 = { 800, 450, 64, 100 };
+    SDL_Rect treePlatfromRect = { 1000, 450, 64, 100 };
+
+    auto isOnGround = [&marioRect, &pipeRect1, &pipeRect2, &treePlatfromRect]() {
+        return checkCollision(marioRect, pipeRect1) ||
+            checkCollision(marioRect, pipeRect2) ||
+            checkCollision(marioRect, treePlatfromRect);
+        };
 
     while (!quit) {
-        // Izracunavanje delta vremena
-        currentTime = SDL_GetTicks();
-        deltaTime = (currentTime - lastTime) / 1000.0f; // DeltaTime u sekundama
-        lastTime = currentTime;
-
+        izracunDeltaVremena(lastTime, currentTime, deltaTime);
+        onGround = isOnGround();
 
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
             else if (e.type == SDL_KEYDOWN) {
-                switch (e.key.keysym.sym) {
-                case SDLK_LEFT:
-                    // marioVelX = -MARIO_SPEED;
-                    marioAccX = -ACCELERATION;
-                    marioState = FRAME_RUN;
-                    break;
-                case SDLK_RIGHT:
-                    marioAccX = ACCELERATION;
-                    marioState = FRAME_RUN;
-                    break;
-                case SDLK_UP:
-                    if (onGround) {
-                        marioVelY = -JUMP_HEIGHT;
-                        onGround = false;
-                        marioState = FRAME_JUMP;
-                        MusicMixer::PlayJumpSound();
-                    }
-                    break;
-                }
+                PomicanjeMariaLijevoDesno(static_cast<SDL_Keycode>(e.key.keysym.sym), marioAccX, marioState);
+                PomicanjeMarijaGore(static_cast<SDL_Keycode>(e.key.keysym.sym), marioVelY, onGround, marioState);
             }
             else if (e.type == SDL_KEYUP) {
                 switch (e.key.keysym.sym) {
                 case SDLK_LEFT:
                 case SDLK_RIGHT:
-                    // marioVelX = 0; ovaj dio je promjenjen nakon sto su dodane animacije
                     marioAccX = 0;
                     if (onGround) {
                         marioState = FRAME_IDLE;
                     }
                     break;
-
-
                 }
             }
         }
 
-        // Povecaj frame za 1, osiugravajuci da se ponavlja unutar opsega animacije 
+       
+        // Povecanje frame za jedan
         frame++;
         if (frame / ANIMATION_SPEED >= 3) {
             frame = 0;
         }
 
-
-        // Azuriranje brzine Marija, dodano nakon stvaranja animacija za Marija
+     
+        // Povecanje brzine Marija, poslije dodavanja animacija za Marija
         marioVelX += marioAccX * deltaTime;
         if (marioVelX > MAX_SPEED) marioVelX = MAX_SPEED;
         if (marioVelX < -MAX_SPEED) marioVelX = -MAX_SPEED;
 
-
-        // Ažuriranje pozicije Marija koristeći deltaTime
+        // Update poziije Marija koristeći delta time 
         marioX += static_cast<float>(marioVelX * deltaTime * 500);
-        marioY += static_cast<float> (marioVelY * deltaTime * 500);
+        marioY += static_cast<float>(marioVelY * deltaTime * 500);
 
-        // Ažuriranje gravitacije 
+        // Gravitacija
+
         if (!onGround) {
             marioVelY += GRAVITY * deltaTime;
             if (marioVelY > MAX_FALL_SPEED) {
@@ -193,142 +151,31 @@ int main(int argc, char* args[]) {
             }
         }
 
-
-        SDL_Rect marioRect = { marioX, marioY, 64, 64 };
-        SDL_Rect pipeRect1 = { 400, 450, 64, 100 }; // Primjer položaja i veličine cijevi 
-        SDL_Rect pipeRect2 = { 800, 450, 64, 100 };
-        SDL_Rect treePlatfromRect = { 1000, 450, 64, 100 };
-
-        // Provjera kolizije s vrhom cijevi i Marija
-        if (checkCollision(marioRect, pipeRect1)) {
-            if (marioY + 64 <= pipeRect1.y + 10) {  // Provjera da li je Mario iznad cijevi
-                marioY = pipeRect1.y - 64;
-                marioVelY = 0;
-                onGround = false; // MAario je sada na tlu odnosno cijevi te moze skakati, promjena s flase na true
-            }
-            else if (marioX + 64 >= pipeRect1.x && marioX < pipeRect1.x + pipeRect1.w) {
-                if (marioX + 32 <= pipeRect1.x + 32) {
-                    marioX = pipeRect1.x - 64; // Pomakni Marija lijevo od cijevi 
-                    marioVelX = 0; // Zaustavi horizontalno kretanje 
-                }
-                else { // Desna strana cijevi
-                    marioX = pipeRect1.x + pipeRect1.w; // Pomakni Marija desno od cijevi 
-                    marioVelX = 0; // Zaustavi horizontalno kretanje
-                }
-            }
-        }
-
-        if (checkCollision(marioRect, pipeRect2)) {
-            if (marioY + 64 <= pipeRect2.y + 10) {  // Provjera da li je Mario iznad cijevi
-                marioY = pipeRect2.y - 64;
-                marioVelY = 0;
-                onGround = false;
-            }
-            else if (marioX + 64 >= pipeRect2.x && marioX < pipeRect2.x + pipeRect2.w) {
-                if (marioX + 32 <= pipeRect2.x + 32) {
-                    marioX = pipeRect2.x - 64;
-                    marioVelX = 0;
-                }
-                else {
-                    marioX = pipeRect2.x + pipeRect2.w;
-                    marioVelX = 0;
-                }
-            }
-        }
-
-        if (checkCollision(marioRect, treePlatfromRect)) {
-            if (marioY + 64 <= treePlatfromRect.y + 10) { // Provejra dali je Mario iznad platforme drvo
-                marioY = treePlatfromRect.y - 64;
-                marioVelY = 0;
-                onGround = false;
-            }
-            else if (marioX + 64 >= treePlatfromRect.x && marioX < treePlatfromRect.x + treePlatfromRect.w) {
-                if (marioX + 25 <= treePlatfromRect.x + 25) {
-                    marioX = treePlatfromRect.x - 64;
-                    marioVelX = 0;
-                }
-                else {
-                    marioX = treePlatfromRect.x + treePlatfromRect.w;
-                    marioVelX = 0;
-                }
-            }
-        }
-
-
-        // Provjera dali je Mario na zemlji ( jednostavna logika ) 
-        if (marioY >= 500) {
-            marioY = 500;
-            marioVelY = 0;
-            onGround = true;
-        }
-
         SDL_RenderClear(&sdlRenderer.GetRenderer());
-
         sdlRenderer.TextureCopy(backgroundTexture.GetTexture(), NULL, NULL);
 
-        // Definiranje veličine prikaza Marija 1.Način
-        /*SDL_Rect marioRect;
-        marioRect.x = 0;   // postavljanje x pozicije Marija
-        marioRect.y = 500; // postavljanje y pozicije Marija
-        marioRect.h = 64;  // postavljanje visine Marija
-        marioRect.w = 64;  // postavljanje širine Marija*/
+        // Rendering cijevi, platformi i Marija
+        SDL_Rect destRect;
 
-        // Postavljanje izvora frame-a za animaciju Marija 
-        SDL_Rect srcRect;
-        switch (marioState) {
-        case FRAME_IDLE:
-            srcRect = { (frame * ANIMATION_SPEED) % 3 * 64,0,64,64 };
-            break;
-        case FRAME_RUN:
-            srcRect = { (frame * ANIMATION_SPEED) % 3 * 64, 64, 64, 64 };
-            break;
-        case FRAME_JUMP:
-            srcRect = { (frame * ANIMATION_SPEED) % 3 * 64, 128, 64, 64 };
-            break;
-        }
+        // Render pipeRect1
+        destRect = { pipeRect1.x, pipeRect1.y, pipeRect1.w, pipeRect1.h };
+        sdlRenderer.TextureCopy(pipeTexture.GetTexture(), NULL, &destRect);
 
-        sdlRenderer.TextureCopy(marioTexture.GetTexture(), NULL, &marioRect);
+        // Render pipeRect2
+        destRect = { pipeRect2.x, pipeRect2.y, pipeRect2.w, pipeRect2.h };
+        sdlRenderer.TextureCopy(pipeTexture2.GetTexture(), NULL, &destRect);
 
-        // Računanje broja blokova koji stanu u širinu prozora
-        int blockWidth = 50;  // Stvarna širina slike bloka
-        int blockHeight = 50;
-        int numBlocks = 1280 / blockWidth;  // Broj blokova koji stanu u širinu prozora
+        // Render treePlatform
+        destRect = { treePlatfromRect.x, treePlatfromRect.y, treePlatfromRect.w, treePlatfromRect.h };
+        sdlRenderer.TextureCopy(treePlatform.GetTexture(), NULL, &destRect);
 
+        // Render Mario
+        destRect = { static_cast<int>(marioX), static_cast<int>(marioY), marioRect.w, marioRect.h };
+        sdlRenderer.TextureCopy(marioTexture.GetTexture(), NULL, &destRect);
 
-
-        // Renderiranje blokova ispod Marija 1.Način
-        /*for (int i = 0; i < numBlocks; i++) {
-            SDL_Rect blockRect;
-            blockRect.x = i * blockWidth; // postavljanje x pozicije bloka
-            blockRect.y = 550;            // postavljanje y pozicije bloka
-            blockRect.w = blockWidth;     // Širina bloka
-            blockRect.h = blockHeight;    // Visina bloka
-
-            SDL_RenderCopy(renderer, blockTexture, NULL, &blockRect);
-        }*/
-
-        // Renderiranje blokova ispod Marija 2.Način
-        for (int i = 0; i < numBlocks; i++) {
-            SDL_Rect blockRect = { i * blockWidth, 550, blockWidth, blockHeight };
-            sdlRenderer.TextureCopy(blockTexture.GetTexture(), NULL, &blockRect);
-        }
-
-        // Renderiranje cijevi, pipe.png
-        //SDL_Rect pipeRect1 = { 400, 450, 64, 100 }; // Primjer položaja i veličine cijevi 
-        //SDL_RenderCopy(renderer, pipeTexture, NULL, &pipeRect1);
-
-
-        // Renderiranje druge cijevi, pipe2.png
-        //SDL_Rect pipeRect2 = { 800, 450, 64, 100 };
-        //SDL_RenderCopy(renderer, pipeTexture2, NULL, &pipeRect2);
-
-        sdlRenderer.TextureCopy(pipeTexture.GetTexture(), NULL, &pipeRect1);
-        sdlRenderer.TextureCopy(pipeTexture2.GetTexture(), NULL, &pipeRect2);
-        sdlRenderer.TextureCopy(treePlatform.GetTexture(), NULL, &treePlatfromRect);
         sdlRenderer.Present();
-        MusicMixer::CleanUp();
     }
 
-
+    MusicMixer::CleanUp();
     return 0;
 }
