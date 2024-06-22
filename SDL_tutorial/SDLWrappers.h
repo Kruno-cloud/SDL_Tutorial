@@ -44,7 +44,7 @@ private:
 class SDLTexture_Wrapper
 {
 public:
-    SDLTexture_Wrapper(const char* path, SDL_Renderer& renderer);
+    SDLTexture_Wrapper(const char* path, SDLRenderer_Wrapper& renderer);
     ~SDLTexture_Wrapper();
     bool IsInitilized();
     SDL_Texture& GetTexture();
