@@ -50,14 +50,36 @@ constexpr int ERROR_RETURN_CODE = 1;
 int main(int argc, char* args[])
 {
     SDL_Wrapper sdlWrapper(SDL_INIT_VIDEO);
-    if (!initializeSDL(sdlWrapper)) return ERROR_RETURN_CODE;
+    if (sdlWrapper.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
 
     SDLWindow_Wrapper sdlWindow("Simple SDL Frame", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 1024, SDL_WINDOW_SHOWN);
-    if (!createWindow(sdlWindow)) return ERROR_RETURN_CODE;
+    if (sdlWindow.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
 
     SDLRenderer_Wrapper sdlRenderer(&sdlWindow.GetWindow(), -1, SDL_RENDERER_ACCELERATED);
-    if (!createRenderer(sdlRenderer, sdlWindow)) return ERROR_RETURN_CODE;
+    if (sdlRenderer.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
 
+    SDLTexture_Wrapper backgroundTexture("textures/CloudsBackround.png", sdlRenderer);
+    if (backgroundTexture.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+
+    SDLTexture_Wrapper marioTexture("textures/CloudsBackround.png", sdlRenderer);
+    if (marioTexture.IsInitilized() == false)
+    {
+        return ERROR_RETURN_CODE;
+    }
+    //copy paste za ostale
+    /*
     SDLTexture_Wrapper backgroundTexture, marioTexture, blockTexture, pipeTexture, pipeTexture2, treePlatform;
     if (!loadTexture(backgroundTexture, "textures/CloudsBackround.png", sdlRenderer)) return ERROR_RETURN_CODE;
     if (!loadTexture(marioTexture, "textures/mario.png", sdlRenderer)) return ERROR_RETURN_CODE;
@@ -65,6 +87,7 @@ int main(int argc, char* args[])
     if (!loadTexture(pipeTexture, "textures/pipe.png", sdlRenderer)) return ERROR_RETURN_CODE;
     if (!loadTexture(pipeTexture2, "textures/pipe2.png", sdlRenderer)) return ERROR_RETURN_CODE;
     if (!loadTexture(treePlatform, "textures/treePlatform.png", sdlRenderer)) return ERROR_RETURN_CODE;
+    */
 
     // Pozcije i brzine Marija 
     float marioX = 0, marioY = 500;
