@@ -24,10 +24,7 @@
     <ClInclude Include="OutputHandler.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Calculator.cpp" />
-    <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="OutputHandler.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
